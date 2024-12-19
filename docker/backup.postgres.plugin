@@ -5,6 +5,24 @@
 # -----------------------------------------------------------------------------------------------------------------
 export serverDataDirectory="/var/lib/pgsql/data"
 
+# Override general function to support defining a schema
+function getDatabaseName(){
+  (
+    _databaseSpec=${1}
+    _databaseName=$(echo ${_databaseSpec} | sed -n 's~^.*/\([^?]*\).*~\1~p')
+    echo "${_databaseName}"
+  )
+}
+
+function getDatabaseSchema(){
+  (
+    _databaseSpec=${1}
+    _paramName=$(echo ${_databaseSpec} | sed -n  's~^.*currentSchema=\(.*$\)~\1~p')
+    _databaseSchema="${!_paramName:-public}"
+    echo ${_databaseSchema}
+  )
+}
+
 function onBackupDatabase(){
   (
     local OPTIND
@@ -21,14 +39,15 @@ function onBackupDatabase(){
 
     _hostname=$(getHostname ${_databaseSpec})
     _database=$(getDatabaseName ${_databaseSpec})
+    _schema=$(getDatabaseSchema ${_databaseSpec})
     _port=$(getPort ${_databaseSpec})
     _portArg=${_port:+"-p ${_port}"}
     _username=$(getUsername ${_databaseSpec})
     _password=$(getPassword ${_databaseSpec})
-    echoGreen "Backing up '${_hostname}${_port:+:${_port}}${_database:+/${_database}}' to '${_backupFile}' ..."
+    echoGreen "Backing up schema '${_schema}' in '${_hostname}${_port:+:${_port}}${_database:+/${_database}}' to '${_backupFile}' ..."
 
     export PGPASSWORD=${_password}
-    pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}" "${_database}" > "${BACKUP_DIR}backup.sql"
+    pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}"-n "${_schema}" "${_database}" > "${BACKUP_DIR}backup.sql"
     pg_dumpall -h "${_hostname}" ${_portArg} -U "${_username}" --roles-only --no-role-passwords > "${BACKUP_DIR}roles.sql"
     cat "${BACKUP_DIR}roles.sql" "${BACKUP_DIR}backup.sql" | gzip > ${_backupFile}
     rm "${BACKUP_DIR}roles.sql" && rm "${BACKUP_DIR}backup.sql"
