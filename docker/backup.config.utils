@@ -29,7 +29,7 @@ function getSchema(){
 function getDatabaseType(){
   (
     _databaseSpec=${1}
-    _databaseType=$(echo ${_databaseSpec} | sed -n 's~^\(.*\)=([^?]*\)~\1~p' | tr '[:upper:]' '[:lower:]')
+    _databaseType=$(echo ${_databaseSpec} | sed -n 's~^\(.*\)([^=?])~\1~p' | tr '[:upper:]' '[:lower:]')
     echo "${_databaseType}"
   )
 }
