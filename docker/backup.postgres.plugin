@@ -30,12 +30,12 @@ function onBackupDatabase(){
     # Add schema to backup command, if specified
     if [ ! -z "${_schema}" ]; then
       _schemaLog="schema '${_schema}' in "
-      _schemaParam="-n ${_schema}"
+      _schemaParam="-n ${_schema} "
     fi
     echoGreen "Backing up ${_schemaLog}'${_hostname}${_port:+:${_port}}${_database:+/${_database}}' to '${_backupFile}' ..."
 
     export PGPASSWORD=${_password}
-    pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}" "${_schemaParam}" "${_database}" > "${BACKUP_DIR}backup.sql"
+    pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}" "${_schemaParam}""${_database}" > "${BACKUP_DIR}backup.sql"
     pg_dumpall -h "${_hostname}" ${_portArg} -U "${_username}" --roles-only --no-role-passwords > "${BACKUP_DIR}roles.sql"
     cat "${BACKUP_DIR}roles.sql" "${BACKUP_DIR}backup.sql" | gzip > ${_backupFile}
     rm "${BACKUP_DIR}roles.sql" && rm "${BACKUP_DIR}backup.sql"
