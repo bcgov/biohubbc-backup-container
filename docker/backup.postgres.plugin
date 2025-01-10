@@ -37,7 +37,12 @@ function onBackupDatabase(){
     export PGPASSWORD=${_password}
     pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}" "${_schemaParam}""${_database}" > "${BACKUP_DIR}backup.sql"
     pg_dumpall -h "${_hostname}" ${_portArg} -U "${_username}" --roles-only --no-role-passwords > "${BACKUP_DIR}roles.sql"
-    cat "${BACKUP_DIR}roles.sql" "${BACKUP_DIR}backup.sql" | gzip > ${_backupFile}
+
+    # post-process roles.sql to remove the "CREATE ROLE" and "ALTER ROLE" statements for the default roles
+    sed -i "/^CREATE ROLE \"${_username}\";/d; /^CREATE ROLE postgres;/d; /^ALTER ROLE \"${_username}\" /d; /^ALTER ROLE postgres /d" "${BACKUP_DIR}roles.sql"
+
+    # create a single gzip file with both the database and roles
+    cat "${BACKUP_DIR}backup.sql" "${BACKUP_DIR}roles.sql" | gzip > ${_backupFile}
     rm "${BACKUP_DIR}roles.sql" && rm "${BACKUP_DIR}backup.sql"
     return ${PIPESTATUS[0]}
   )
