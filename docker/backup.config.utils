@@ -13,11 +13,13 @@ function getDatabaseName(){
 function getSchema(){
   (
     _databaseSpec=${1}
-    _backupMode=${2:-'backup'}
+    _backupMode=${2:-'verify'}
     _schema=""
     
     if [ "${_backupMode}" == 'backup' ]; then
-      _schema=$(echo ${_databaseSpec} | sed -n  's~^.*backupSchema=\([^&]*\).*~\1~p')
+      # Currently not in use, needs more tweaks to be used.
+      # _schema=$(echo ${_databaseSpec} | sed -n  's~^.*backupSchema=\([^&]*\).*~\1~p')
+      echoYellow "Backing up only a specific schema is not supported yet."
     elif [ "${_backupMode}" == 'verify' ]; then
       _verifySchema=$(echo ${_databaseSpec} | sed -n  's~^.*verifySchema=\([^&]*\).*~\1~p')
       _schema="${_verifySchema:-$TABLE_SCHEMA}"      

@@ -21,21 +21,15 @@ function onBackupDatabase(){
 
     _hostname=$(getHostname ${_databaseSpec})
     _database=$(getDatabaseName ${_databaseSpec})
-    _schema=$(getSchema ${_databaseSpec} 'backup')
     _port=$(getPort ${_databaseSpec})
     _portArg=${_port:+"-p ${_port}"}
     _username=$(getUsername ${_databaseSpec})
     _password=$(getPassword ${_databaseSpec})
 
-    # Add schema to backup command, if specified
-    if [ ! -z "${_schema}" ]; then
-      _schemaLog="schema '${_schema}' in "
-      _schemaParam="-n ${_schema} "
-    fi
-    echoGreen "Backing up ${_schemaLog}'${_hostname}${_port:+:${_port}}${_database:+/${_database}}' to '${_backupFile}' ..."
+    echoGreen "Backing up '${_hostname}${_port:+:${_port}}${_database:+/${_database}}' to '${_backupFile}' ..."
 
     export PGPASSWORD=${_password}
-    pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}" "${_schemaParam}""${_database}" > "${BACKUP_DIR}backup.sql"
+    pg_dump -Fp -h "${_hostname}" ${_portArg} -U "${_username}" "${_database}" > "${BACKUP_DIR}backup.sql"
     pg_dumpall -h "${_hostname}" ${_portArg} -U "${_username}" --roles-only --no-role-passwords > "${BACKUP_DIR}roles.sql"
 
     # post-process roles.sql to remove the "CREATE ROLE" and "ALTER ROLE" statements for the default roles
