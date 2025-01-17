@@ -5,15 +5,33 @@
 function getDatabaseName(){
   (
     _databaseSpec=${1}
-    _databaseName=$(echo ${_databaseSpec} | sed -n 's~^.*/\(.*$\)~\1~p')
+    _databaseName=$(echo ${_databaseSpec} | sed -n 's~^.*/\([^?]*\).*~\1~p')
     echo "${_databaseName}"
+  )
+}
+
+function getSchema(){
+  (
+    _databaseSpec=${1}
+    _backupMode=${2:-'verify'}
+    _schema=""
+    
+    if [ "${_backupMode}" == 'backup' ]; then
+      # Currently not in use, needs more tweaks to be used.
+      # _schema=$(echo ${_databaseSpec} | sed -n  's~^.*backupSchema=\([^&]*\).*~\1~p')
+      echoYellow "Backing up only a specific schema is not supported yet."
+    elif [ "${_backupMode}" == 'verify' ]; then
+      _verifySchema=$(echo ${_databaseSpec} | sed -n  's~^.*verifySchema=\([^&]*\).*~\1~p')
+      _schema="${_verifySchema:-$TABLE_SCHEMA}"      
+    fi
+    echo "${_schema}"
   )
 }
 
 function getDatabaseType(){
   (
     _databaseSpec=${1}
-    _databaseType=$(echo ${_databaseSpec} | sed -n 's~^\(.*\)=.*$~\1~p' | tr '[:upper:]' '[:lower:]')
+    _databaseType=$(echo ${_databaseSpec} | sed -n 's~^\(.*\)([^=?])~\1~p' | tr '[:upper:]' '[:lower:]')
     echo "${_databaseType}"
   )
 }
@@ -56,7 +74,7 @@ function getHostname(){
     _databaseSpec=${1}
 
     if [ -z "${localhost}" ]; then
-      _hostname=$(echo ${_databaseSpec} | sed 's~^.\+[=]~~;s~[:/].*~~')
+      _hostname=$(echo ${_databaseSpec} | sed 's~^.\+[=\+=[^?]]~~;s~[:/].*~~')
     else
       _hostname="127.0.0.1"
     fi
@@ -114,17 +132,18 @@ function readConf(){
       #  - Remove any lines that do not match the expected database spec format(s)
       #     - [<DatabaseType>=]<Hostname/>/<DatabaseName/>
       #     - [<DatabaseType>=]<Hostname/>:<Port/>/<DatabaseName/>
-      filters+="/^[a-zA-Z0-9=_/-]*\(:[0-9]*\)\?\/[a-zA-Z0-9_/-]*$/!d;"
+      #     - [<DatabaseType>=]<Hostname/>:<Port/>/<DatabaseName/>?<ExtraParams/>
+      filters+="/^[a-zA-Z0-9=_/-]*\(:[0-9]*\)\?\/[a-zA-Z0-9_/-]*\(\?.*\)\?$/!d;"
       if [ -z "${all}" ]; then
         # Remove any database configs that are not for the current container type
         # Database configs that do not define the database type are assumed to be for the current container type
-        filters+="/\(^[a-zA-Z0-9_/-]*\(:[0-9]*\)\?\/[a-zA-Z0-9_/-]*$\)\|\(^${CONTAINER_TYPE}=\)/!d;"
+        filters+="/\(^[a-zA-Z0-9_/-]*\(:[0-9]*\)\?\/[a-zA-Z0-9_/-]*\([^?]*\).*\)\|\(^${CONTAINER_TYPE}=\)/!d;"
       fi
     else
       # Read in the cron config ...
       #  - Remove any lines that MATCH expected database spec format(s),
       #    leaving, what should be, cron tabs.
-      filters+="/^[a-zA-Z0-9=_/-]*\(:[0-9]*\)\?\/[a-zA-Z0-9_/-]*$/d;"
+      filters+="/^[a-zA-Z0-9=_/-]*\(:[0-9]*\)\?\/[a-zA-Z0-9_/-]*\(\?.*\)\?$/d;"
     fi
 
     if [ -f ${BACKUP_CONF} ]; then
