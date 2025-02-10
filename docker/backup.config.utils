@@ -74,7 +74,7 @@ function getHostname(){
     _databaseSpec=${1}
 
     if [ -z "${localhost}" ]; then
-      _hostname=$(echo ${_databaseSpec} | sed 's~^.\+[=\+=[^?]]~~;s~[:/].*~~')
+      _hostname=$(echo ${_databaseSpec} | sed 's~[?].*~~;s~^[^=]*=~~;s~:.*~~;')
     else
       _hostname="127.0.0.1"
     fi
