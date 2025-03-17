@@ -88,7 +88,7 @@ HINT:  The extension must first be installed on the system where PostgreSQL is r
 ERROR:  extension "set_user" does not exist
 ```
 
-These extensions are not supported on the Fedora operating system. Which is used as the base image for the backup container, `quay.io/fedora/postgresql-15:15`.  Adding the `-I` flag to the verify and restore processes allows the container to restore your database in a patroni cluster.  
+These extensions are not supported on the Fedora operating system. Which is used as the base image for the backup container, `quay.io/fedora/postgresql-16:16`.  Adding the `-I` flag to the verify and restore processes allows the container to restore your database in a patroni cluster.  
 
 ```
 ./backup.sh -I -v all

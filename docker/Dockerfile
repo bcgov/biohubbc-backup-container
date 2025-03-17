@@ -1,5 +1,5 @@
 # This image provides a postgres installation from which to run backups
-FROM --platform=linux/amd64 quay.io/fedora/postgresql-15:15
+FROM --platform=linux/amd64 quay.io/fedora/postgresql-16:16
 
 # Change timezone to PST for convenience
 ENV TZ=PST8PDT
@@ -37,7 +37,6 @@ RUN echo $TZ > /etc/timezone
 RUN dnf install -y util-linux
 
 # Important - Reset to the base image's user account.
-USER 26
 
 # Set the default CMD.
 CMD sh /backup.sh
