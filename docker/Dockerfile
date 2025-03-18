@@ -37,6 +37,7 @@ RUN echo $TZ > /etc/timezone
 RUN dnf install -y util-linux
 
 # Important - Reset to the base image's user account.
+USER 26
 
 # Set the default CMD.
 CMD sh /backup.sh
