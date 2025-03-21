@@ -194,6 +194,27 @@ objects:
                   value: ${ENVIRONMENT_FRIENDLY_NAME}
                 - name: ENVIRONMENT_NAME
                   value: ${ENVIRONMENT_NAME}
+                # S3 Object Store Configuration
+                - name: S3_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${OBJECT_STORE_SECRET_NAME}
+                      key: ${OBJECT_STORE_URL_KEY_NAME}
+                - name: S3_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${OBJECT_STORE_SECRET_NAME}
+                      key: ${OBJECT_STORE_BUCKET_KEY_NAME}
+                - name: S3_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${OBJECT_STORE_SECRET_NAME}
+                      key: ${OBJECT_STORE_ACCESS_KEY_NAME}
+                - name: S3_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: ${OBJECT_STORE_SECRET_NAME}
+                      key: ${OBJECT_STORE_SECRET_KEY_NAME}
               resources:
                 requests:
                   cpu: ${CPU_REQUEST}
@@ -220,7 +241,7 @@ parameters:
     displayName: Source Image Name
     description: The name of the image to use for this resource.  Use 'backup-{database name}' depending on your database provider
     required: true
-    value: backup-container
+    value: biohubbc-db-postgresql-backup
   - name: APP_NAME
     displayName: App Name
     description: Used to group resources together.  Defaults to backup-container
@@ -235,26 +256,26 @@ parameters:
     displayName: Namespace Name
     description: The name of the namespace being deployed to..
     required: true
-    value: devex-von-image
+    value: af2668-prod
   - name: IMAGE_NAMESPACE
     displayName: Image Namespace
     description: The namespace of the OpenShift project containing the imagestream for the application.
-    value: bcgovimages
+    value: af2668-tools
   - name: "IMAGE_REGISTRY"
     description: "The base OpenShift docker registry"
     displayName: "Docker Image Registry"
     required: true
     # Set value to "docker-registry.default.svc:5000" if using OCP3
-    value: "docker.io"
+    value: "image-registry.openshift-image-registry.svc:5000"
   - name: IMAGE_TAG
-    displayName: 
+    displayName:
     description: Image tag name, e.g. latest
     value: latest
   - name: TAG_NAME
     displayName: Environment TAG name
     description: The TAG name for this environment, e.g., dev, test, prod
     required: true
-    value: dev
+    value: prod
   - name: DATABASE_SERVICE_NAME
     displayName: Database Service Name
     description: Used for backward compatibility only. Not needed when using the recommended 'backup.conf' configuration.  The name of the database service.
@@ -274,17 +295,17 @@ parameters:
     displayName: Database Deployment Name
     description: The name associated to the database deployment resources.  In particular, this is used to wire up the credentials associated to the database.
     required: true
-    value: postgresql
+    value: biohubbc-db-postgresql-prod
   - name: DATABASE_USER_KEY_NAME
     displayName: Database User Key Name
     description: The database user key name stored in database deployment resources specified by DATABASE_DEPLOYMENT_NAME.
     required: true
-    value: database-user
+    value: database-admin
   - name: DATABASE_PASSWORD_KEY_NAME
     displayName: Database Password Key Name
     description: The database password key name stored in database deployment resources specified by DATABASE_DEPLOYMENT_NAME.
     required: true
-    value: database-password
+    value: database-admin-password
   - name: MSSQL_SA_PASSWORD
     displayName: MSSQL SA Password
     description: The database password to use for the local backup database.
@@ -293,7 +314,7 @@ parameters:
     displayName: Table Schema
     description: The table schema for your database.  Used for Postgres backups.
     required: true
-    value: public
+    value: biohub
   - name: BACKUP_STRATEGY
     displayName: Backup Strategy
     description: The strategy to use for backups; for example daily, or rolling.
@@ -338,12 +359,12 @@ parameters:
     displayName: Friendly Environment Name
     description: The human readable name of the environment.  This variable is used by the webhook integration to identify the environment in which the backup notifications originate.
     required: false
-    value: ""
+    value: "SIMS DB Backups"
   - name: ENVIRONMENT_NAME
     displayName: Environment Name (Environment Id)
     description: The name or Id of the environment.  This variable is used by the webhook integration and by the NetworkSecurityPolicies to identify the environment in which the backup notifications originate.
     required: true
-    value: ""
+    value: "prod"
   - name: BACKUP_DIR
     displayName: The root backup directory
     description: The name of the root backup directory.  The backup volume will be mounted to this directory.
@@ -398,7 +419,7 @@ parameters:
     displayName: Backup Volume Size
     description: The size of the persistent volume used to store the backups, e.g. 512Mi, 1Gi, 2Gi.  Ensure this is sized correctly.  Refer to the container documentation for details.
     required: true
-    value: 5Gi
+    value: 30Gi
   - name: BACKUP_VOLUME_CLASS
     displayName: Backup Volume Class
     description: The class of the persistent volume used to store the backups; netapp-file-standard is the recommended default.
@@ -413,7 +434,7 @@ parameters:
     displayName: Backup Volume Size
     description: The size of the persistent volume used for restoring and verifying backups, e.g. 512Mi, 1Gi, 2Gi.  Ensure this is sized correctly.  It should be large enough to contain your largest database.
     required: true
-    value: 1Gi
+    value: 20Gi
   - name: VERIFICATION_VOLUME_CLASS
     displayName: Backup Volume Class
     description: The class of the persistent volume used for restoring and verifying backups; netapp-file-standard, netapp-block-standard.
@@ -421,9 +442,9 @@ parameters:
     value: netapp-file-standard
   - name: VERIFICATION_VOLUME_MOUNT_PATH
     displayName: Verification Volume Mount Path
-    description: The path on which to mount the verification volume.  This is used by the database server to contain the database configuration and data files. For Mongo, please use /var/lib/mongodb/data . For MSSQL, please use /var/opt/mssql/data. For MariaDB, please use /var/lib/mysql/data
+    description: The path on which to mount the verification volume. The default path is normally `/var/lib/pgsql/data`, however SIMS currently uses `/var/lib/postgresql/data/17` (where 17 is the database version).
     required: true
-    value: /var/lib/pgsql/data
+    value: /var/lib/postgresql/data/17
   - name: CPU_REQUEST
     displayName: Resources CPU Request
     description: The resources CPU request (in cores) for this build.
@@ -444,3 +465,19 @@ parameters:
     description: The resources Memory limit (in Mi, Gi, etc) for this build.
     required: true
     value: 0Mi
+  # S3 Object Store Configuration
+  - name: OBJECT_STORE_SECRET_NAME
+    required: true
+    value: biohubbc-object-store
+  - name: OBJECT_STORE_URL_KEY_NAME
+    required: true
+    value: object_store_url_https
+  - name: OBJECT_STORE_BUCKET_KEY_NAME
+    required: true
+    value: object_store_bucket_name_for_backups
+  - name: OBJECT_STORE_ACCESS_KEY_NAME
+    required: true
+    value: object_store_access_key_id
+  - name: OBJECT_STORE_SECRET_KEY_NAME
+    required: true
+    value: object_store_secret_key_id

@@ -15,7 +15,7 @@ parameters:
   - name: "JOB_PERSISTENT_STORAGE_NAME"
     displayName: "Backup Persistent Storage Name"
     description: "Pre-Created PVC to use for backup target"
-    value: "bk-devex-von-tools-a9vlgd1jpsg1"
+    value: "backup-postgres"
     required: true
   - name: "SCHEDULE"
     displayName: "Cron Schedule"
@@ -33,7 +33,7 @@ parameters:
     displayName: "Docker Image Registry"
     required: true
     # Set value to "docker-registry.default.svc:5000" if using OCP3
-    value: "docker.io"
+    value: "image-registry.openshift-image-registry.svc:5000"
   - name: "IMAGE_NAMESPACE"
     displayName: "Image Namespace"
     description: "The namespace of the OpenShift project containing the imagestream for the application."
@@ -43,12 +43,12 @@ parameters:
     displayName: "Environment TAG name"
     description: "The TAG name for this environment, e.g., dev, test, prod"
     required: true
-    value: "dev"
+    value: "prod"
   - name: "DATABASE_SERVICE_NAME"
     displayName: "Database Service Name"
     description: "The name of the database service."
     required: true
-    value: "postgresql"
+    value: "biohubbc-db-postgresql-prod"
   - name: "DATABASE_DEFAULT_PORT"
     displayName: "Database Service Port"
     description: "The configured port for the database service"
@@ -58,26 +58,26 @@ parameters:
     displayName: "Database Name"
     description: "The name of the database."
     required: true
-    value: "MyDatabase"
+    value: "biohubbc"
   - name: "DATABASE_DEPLOYMENT_NAME"
     displayName: "Database Deployment Name"
     description: "The name associated to the database deployment resources.  In particular, this is used to wire up the credentials associated to the database."
     required: true
-    value: "postgresql"
+    value: "biohubbc-db-postgresql-prod"
   - name: DATABASE_USER_KEY_NAME
     displayName: Database User Key Name
     description:
       The database user key name stored in database deployment resources specified
       by DATABASE_DEPLOYMENT_NAME.
     required: true
-    value: database-user
+    value: database-admin
   - name: DATABASE_PASSWORD_KEY_NAME
     displayName: Database Password Key Name
     description:
       The database password key name stored in database deployment resources
       specified by DATABASE_DEPLOYMENT_NAME.
     required: true
-    value: database-password
+    value: database-admin-password
   - name: "BACKUP_STRATEGY"
     displayName: "Backup Strategy"
     description: "The strategy to use for backups; for example daily, or rolling."

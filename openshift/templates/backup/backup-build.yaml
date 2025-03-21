@@ -41,12 +41,12 @@ parameters:
     displayName: Name
     description: The name assigned to all of the resources.  Use 'backup-{database name}' depending on your database provider
     required: true
-    value: backup-postgres
+    value: biohubbc-db-postgresql-backup
   - name: GIT_REPO_URL
     displayName: Git Repo URL
     description: The URL to your GIT repo.
     required: true
-    value: https://github.com/BCDevOps/backup-container.git
+    value: https://github.com/bcgov/biohubbc-backup-container.git
   - name: GIT_REF
     displayName: Git Reference
     description: The git reference or branch.
@@ -69,6 +69,6 @@ parameters:
     value: latest
   - name: BASE_IMAGE_FOR_BUILD
     displayName: FROM Image Tag
-    description: Base image to build from.  Docker creds or Artificatory setup may be needed to alleviate docker rate-limiting
+    description: Base image to build from. Modified to pull the SIMS postgres-postgis 17 image.
     required: true
-    value: quay.io/fedora/postgresql-14:14
+    value: image-registry.openshift-image-registry.svc:5000/af2668-tools/postgres-postgis:17-bullseye
